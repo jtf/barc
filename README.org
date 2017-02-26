@@ -31,7 +31,9 @@
    The number is checked for a correct checksum. Output is prohibited
    (default) if checksum test has failed.  If you really really want
    to suppress this check and generate an incorrect barcode use
-   command line option --no-checksum.
+   command line option --no-checksum.  In case of ISBN-10 a new
+   checksum is calculated and so the code corrected, due to ISBN-10 to
+   ISBN-13 transformation!
 
    CODE_DATA can have any format.  All hyphens and characters, beside
    digits, and X (or x) on tenth position, will be ignored.

@@ -22,13 +22,13 @@ void print_usage(char*const *argv)
 static const char *optString = "hqvf:oC";
 static struct option long_options[] =
 {
-    {"help",        no_argument,       0, 'h'},
-    {"quiet",       no_argument,       0, 'q'},
-    {"no-checksum", no_argument,       0, 'C'},
-    {"version",     no_argument,       0, 'v'},
-    {"open",        required_argument, 0, 'f'},
-    {"out",         required_argument, 0, 'o'},
-    {0, 0, 0, 0}
+    {"help",        no_argument,       NULL, 'h'},
+    {"quiet",       no_argument,       NULL, 'q'},
+    {"no-checksum", no_argument,       NULL, 'C'},
+    {"version",     no_argument,       NULL, 'v'},
+    {"open",        required_argument, NULL, 'f'},
+    {"out",         required_argument, NULL, 'o'},
+    {NULL,          0,                 NULL,  0 }
 };
 
 void

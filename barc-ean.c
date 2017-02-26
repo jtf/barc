@@ -2,6 +2,7 @@
 #include <ctype.h>    // for isdigit()
 //#include <string.h>   // for strlen()
 #include "barc.h"
+#include "barc-ean.h"
 
 
 // calculate checksum depending on barcode type
@@ -9,120 +10,153 @@
 int
 calc_ean_checksum(struct barcode_data *bc)
 {
-  int rv; //return value
-  bc->checksum = 0;
-  switch(bc->barcode_type)
+    int rv; //return value
+    bc->checksum = 0;  // init checksum
+
+    switch(bc->barcode_type)
     {
     case ISBN_10:
-      for (int i=0; i<9; i++)
+	for (int i=0; i<9; i++)
 	{
-	  bc->checksum += bc->UPC[i]*(i+1);
+	    bc->checksum += bc->UPC[i]*(i+1);
 	}
-      bc->checksum %= 11;
-      rv = (bc->UPC[9] == bc->checksum);
+	bc->checksum %= 11;
+	rv = (bc->UPC[9] == bc->checksum);
+	break;
     case EAN_13:
     case ISBN_13:
-      for (int i=0; i<6; i++)
+	for (int i=0; i<6; i++)
 	{
-	  bc->checksum += bc->UPC[2*i] + bc->UPC[2*i+1]*3;
+	    bc->checksum += bc->UPC[2*i] + bc->UPC[2*i+1]*3;
 	}
-      bc->checksum = (10 - (bc->checksum % 10)) % 10;
-      rv = (bc->UPC[12] == bc->checksum);
+	bc->checksum = (10 - (bc->checksum % 10)) % 10;
+	rv = (bc->UPC[12] == bc->checksum);
+	break;
     }
-  return rv;
+    return rv;
 }
 
+void
+transform_ISBN10to13(struct barcode_data *bc)
+{
+    if (bc->barcode_type != ISBN_10) return;
+
+    // arrange numbers
+    for (int i=8; i>=0; i--)
+	bc->UPC[i+3] = bc->UPC[i];
+    bc->UPC[0]=9;
+    bc->UPC[1]=7;
+    bc->UPC[2]=8;
+
+    // set new type
+    bc->barcode_type = ISBN_13;
+
+    // calculate and reset new checksum
+    if (!calc_ean_checksum(bc))
+	bc->UPC[12] = bc->checksum;
+}
 
 // extern: Parse ISBN Number and save values in barcode struct
 int
 parse_ISBN(char **isbn, struct barcode_data *bc, struct options *o)
 {
-  int isbnpos = 0;
-  char * digit_p;
-  unsigned char * title_p;
+    int isbnpos = 0;
+    char * digit_p;
+    unsigned char * title_p;
 
-  digit_p = *isbn;
+    digit_p = *isbn;
 
-  title_p = bc->title;
+    title_p = bc->title;
 
-  // let title begin with "ISBN "
-  *title_p++='I'; *title_p++='S'; *title_p++='B'; *title_p++='N'; *title_p++=' ';
+    // let title begin with "ISBN "
+    *title_p++='I'; *title_p++='S'; *title_p++='B'; *title_p++='N'; *title_p++=' ';
 
-  if (!o->quiet) fprintf(stderr, "║│ ║││║   ISBN: ");
+    if (!o->quiet) fprintf(stderr, "║│ ║││║   ISBN: ");
 
-  while( *digit_p != '\n' && isbnpos <= 13 )
+    while( *digit_p != '\n' && isbnpos <= 13 )
     {
-      *title_p++ = *digit_p;
-      if (isdigit(*digit_p))
+	*title_p++ = *digit_p;
+	if (isdigit(*digit_p))
 	{
-	  bc->UPC[isbnpos++] = *digit_p - 48;
-	  if (!o->quiet) fprintf(stderr, "%c ", *digit_p);
+	    bc->UPC[isbnpos++] = *digit_p - 48;
+	    if (!o->quiet) fprintf(stderr, "%c ", *digit_p);
 	}
-      else
-	if (isbnpos==9 && ( *digit_p == 'X' || *digit_p=='x'))
-	  {
-	    if (!o->quiet) fprintf(stderr, "%c (X found) ", *digit_p);
-	    bc->UPC[isbnpos++] = 10;
-	  }
-      digit_p++;
+	else
+	    if (isbnpos==9 && ( *digit_p == 'X' || *digit_p=='x'))
+	    {
+		if (!o->quiet) fprintf(stderr, "%c (X found) ", *digit_p);
+		bc->UPC[isbnpos++] = 10;
+	    }
+	digit_p++;
     }
     if (!o->quiet) fprintf(stderr, "\n");
 
     *title_p = '\0';
-    
-  // decide on number of digits which code we have
+
+    // decide on number of digits which code we have
     switch(isbnpos)
-      {
-      case 10 :
+    {
+	// ------------------- ISBN 10 -------------------------
+    case 10 :
 	if (!o->quiet) fprintf(stderr, "║│ ║││║   found ISBN-10\n║│ ║││║   1-14: ");
 	for(int i=0; i<14; i++)
-	  {
+	{
 	    if (!o->quiet) fprintf(stderr, "%d ", bc->UPC[i]);
-	  }
+	}
 	bc->barcode_type=ISBN_10;
 	if (!o->quiet) fprintf(stderr, "\n");
-	
-	//	    calc_checksum(); // bc_data.checksum = (bc_data.UPC[0]*1 + bc_data.UPC[1]*2 + bc_data.UPC[2]*3 + bc_data.UPC[3]*4 + bc_data.UPC[4]*5 + bc_data.UPC[5]*6 + bc_data.UPC[6]*7 + bc_data.UPC[7]*8 + bc_data.UPC[8]*9 ) % 11;
-	
-	// build check function  type -> checksum<->UPC[9|12]
-	//	    if(bc_data.checksum == bc_data.UPC[9])
+
 	if(calc_ean_checksum(bc))
-	  {
+	{
 	    if (!o->quiet) fprintf(stderr, "║│ ║││║      calculated checksum: %d\n", bc->checksum);
-	  }
+
+	    // transform ISBN-10 to ISBN-13
+	    transform_ISBN10to13(bc);
+
+	    // output message
+	    if (!o->quiet)
+	    {
+		fprintf(stderr, "║│ ║││║   transformed to ISBN-13\n");
+		fprintf(stderr, "║│ ║││║   1-14: ");
+		for(int i=0; i<14; i++)
+		    fprintf(stderr, "%d ", bc->UPC[i]);
+		fprintf(stderr, "\n");
+		fprintf(stderr, "║│ ║││║        new calculated checksum: %d\n", bc->checksum);
+	    }
+
+	}
 	else
-	  {
+	{
 	    if (!o->quiet) fprintf(stderr, "║│!║││║   ISBN-10 checksum error  ^ (should be %d, is %d)\n",
-				  bc->checksum, bc->UPC[9]);
+				   bc->checksum, bc->UPC[9]);
 	    return 0;
-	  }
+	}
 	break;
-      case 13 :
-	  if (!o->quiet) fprintf(stderr, "║│ ║││║   found ISBN-13\n║│ ║││║   1-14: ");
-	  for(int i=0; i<14; i++)
-	    {
-	      if (!o->quiet) fprintf(stderr, "%d ", bc->UPC[i]);
-	    }
-	  bc->barcode_type=ISBN_13;
-	  if (!o->quiet) fprintf(stderr, "\n");
+	// ------------------- ISBN 13 -------------------------
+    case 13 :
+	if (!o->quiet) fprintf(stderr, "║│ ║││║   found ISBN-13\n║│ ║││║   1-14: ");
+	for(int i=0; i<14; i++)
+	{
+	    if (!o->quiet) fprintf(stderr, "%d ", bc->UPC[i]);
+	}
+	bc->barcode_type=ISBN_13;
+	if (!o->quiet) fprintf(stderr, "\n");
 
-      //	    calc_checksum(); // bc_data.checksum = 10 - (bc_data.UPC[0] + bc_data.UPC[1]*3 + bc_data.UPC[2] + bc_data.UPC[3]*3 + bc_data.UPC[4] + bc_data.UPC[5]*3 + bc_data.UPC[6] + bc_data.UPC[7]*3 + bc_data.UPC[8] + bc_data.UPC[9]*3 + bc_data.UPC[10] + bc_data.UPC[11] * 3 ) % 10;
-
-	  if(calc_ean_checksum(bc))
-	    {
-	      if (!o->quiet) fprintf(stderr, "║│ ║││║            calculated checksum: %d\n", bc->checksum);
-	    }
-	  else
-	    {
-	      if (!o->quiet) fprintf(stderr, "║│!║││║   ISBN-13 checksum error        ^ (should be %d, is %d)\n",
-				    bc->checksum, bc->UPC[12]);
-	      return 0;
-	    }
-	  break;
-      default :
+	if(calc_ean_checksum(bc))
+	{
+	    if (!o->quiet) fprintf(stderr, "║│ ║││║            calculated checksum: %d\n", bc->checksum);
+	}
+	else
+	{
+	    if (!o->quiet) fprintf(stderr, "║│!║││║   ISBN-13 checksum error        ^ (should be %d, is %d)\n",
+				   bc->checksum, bc->UPC[12]);
+	    return 0;
+	}
+	break;
+    default :
 	if (!o->quiet) fprintf(stderr, "║│!║││║   Error parsing ISBN (too short?)\n");
 	return 0;
-      }
+    }
     return 1;
 }
 
@@ -181,7 +215,7 @@ fill_EAN_13(struct barcode_data *bc)
 }
 
 /*
- *  take barcode struct and generate TROFF code from .bars
+ *  take barcode struct and generate TROFF code from bc.bars
  */
 void
 print_EAN_13(struct barcode_data *bc)
@@ -229,4 +263,3 @@ print_EAN_13(struct barcode_data *bc)
   //remove macroc
   fprintf(stdout, ".rm black\n.rm space\n.rm blacklong\n");
 }
-

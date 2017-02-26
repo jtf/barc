@@ -52,7 +52,7 @@ parse_request(char ** request, int row, struct barcode_data *bc, struct options 
       if (!o->quiet)
       {
 	  fprintf(stderr, "BARCODE request found in line (%d) with parameters: \"", row);
-	  
+
 	  err_output_p = content;
 	  while(*err_output_p != '\n')
 	  {

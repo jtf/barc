@@ -8,11 +8,8 @@
 int
 main(int argc, char **argv)
 {
-
     struct options Opts = {0};
     struct barcode_data bc_data;
-
-
     
     parse_args(&argc, argv, &Opts);
 
@@ -25,7 +22,6 @@ main(int argc, char **argv)
     
     while ((c=fgetc(stdin)) != EOF)
     {
-
 	bytenum++;
 
 	if (c=='\n')
@@ -42,7 +38,12 @@ main(int argc, char **argv)
 	    bytenum += strlen(request_buffer);
 	    request_name_p = request_buffer;
 	    ignore_leading_blank(&request_name_p);
-	  
+
+	    //reset barcode
+	    for(int l=0; l<=14; l++)
+		bc_data.UPC[l]=0;
+	    bc_data.barcode_type = undefined;
+		
 	    if (parse_request(&request_name_p, row, &bc_data, &Opts))
 	    {
 
