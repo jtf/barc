@@ -1,0 +1,46 @@
+
+* Compile
+
+  gcc -std=c99 -Wpedantic -Wall barc.c barc-args.c barc-ean.c -o barc
+
+* Usage
+
+  see: ./barc -h
+
+** implemented Options
+
+   - -q --quiet :: suppress output on stderr
+   - -h --help  :: print usage description
+
+* Troff request syntax
+
+  .barcode CODE_TYPE CODE_DATA
+
+  // not implemented yet
+  .barcopt [next] KEY VAL [KEY VAL] … 
+
+** CODE_TYPE: EAN					:not_implemented_yet:
+
+** CODE_TYPE: ISBN
+
+   The ISBN code type supports the old ISBN-10 and new ISBN-13. In
+   both cases EAN-13 barcode is generated.
+
+   The ISBN-10 will be transformed to an ISBN-13 number.
+
+   The number is checked for a correct checksum. Output is prohibited
+   (default) if checksum test has failed.  If you really really want
+   to suppress this check and generate an incorrect barcode use
+   command line option --no-checksum.
+
+   CODE_DATA can have any format.  All hyphens and characters, beside
+   digits, and X (or x) on tenth position, will be ignored.
+
+   - ISBN-10 example :: .barcode ISBN 0-547-24964-0
+   - ISBN-10 example :: .barcode ISBN 193778553X
+   - ISBN-13 example :: .barcode ISBN isbn: 978-0-547-24964-3
+   - ISBN-13 example :: .barcode ISBN 9781593274351
+
+   /NOTE:/ If the title for ISBN barcodes is implemented the format of
+   whole CODE_DATA string will be used.
+

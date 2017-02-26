@@ -1,10 +1,6 @@
 #pragma once
 
-// DOPPELTGEMOPPELT
-#ifndef BARC_H
-#define BARC_H
-
-
+#include "barc-args.h"
 
 struct
 barcode_data
@@ -123,5 +119,3 @@ ean_delimiter[5][7] =
     {3, 1, 1, 2, 0, 0, 0}, // add-on guard
     {2, 1, 1, 0, 0, 0, 0}  // add-on deliniator
 };
-
-#endif
