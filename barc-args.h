@@ -3,6 +3,7 @@
 struct options
 {
   int quiet;
+  int no_checksum;
 };
 
 

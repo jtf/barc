@@ -43,7 +43,7 @@ parse_args(int *argc_p, char*const *argv, struct options *o)
 	    o->quiet=1;
 	    break;
 	case 'C':
-	    fprintf(stderr, "--> c\n");
+	    o->no_checksum=1;
 	    break;
 	case 'f':
 	    exit(1);

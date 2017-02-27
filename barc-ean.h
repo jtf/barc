@@ -82,7 +82,7 @@ ean_delimiter[5][7] =
 };
 
 //barc-ean.c
-int parse_ISBN(char**, struct barcode_data*, struct options*);
+int parse_EAN(char**, struct barcode_data*, struct options*);
 
 void fill_EAN_13(struct barcode_data*);
 void print_EAN_13(struct barcode_data*);

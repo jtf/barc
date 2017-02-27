@@ -8,7 +8,7 @@
 int
 main(int argc, char **argv)
 {
-    struct options Opts = {0};
+    struct options Opts = {0, 0};
     struct barcode_data bc_data;
     
     parse_args(&argc, argv, &Opts);
@@ -51,8 +51,7 @@ main(int argc, char **argv)
 		// wir können ihn generieren
 		
                 // fprintf(stdout, "Barcode [%d, %s, %d]\n", bc_data.barcode_type, bc_data.title, bc_data.checksum);
-		// fprintf(stdout, "[Barcode: %s]\n", bc_data.title);
-		// print_foo();
+
 		fill_EAN_13(&bc_data);
 		print_EAN_13(&bc_data);
 	    }
