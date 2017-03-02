@@ -1,7 +1,12 @@
 
 * Compile
 
-  gcc -std=c99 -Wpedantic -Wall barc.c barc-args.c barc-ean.c -o barc
+  gcc -std=gnu11 -Wpedantic -Wall -Wextra -O3\
+  barc.c barc-args.c barc-ean.c barc-parse.c -o barc
+
+  or
+
+  make
 
 * Usage
 
@@ -72,6 +77,9 @@
     ignored. Only digits are considered.
 
     - EAN-13 example :: .barcode EAN 101-213-141-516-4
+
+    - EAN-13 with addon example ::
+	 .barcode EAN 101-213-141-516-4 ; 12-345
 
     /NOTE:/ there will be no title in this
 

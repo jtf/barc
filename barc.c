@@ -8,7 +8,12 @@
 int
 main(int argc, char **argv)
 {
-    struct options Opts = {0, 0};
+    // set default options
+    struct options Opts = {
+	0,   // quiet off
+	0,   // test for checksums on
+	';'  // add-on char set to semicolon
+    };
     struct barcode_data bc_data;
     
     parse_args(&argc, argv, &Opts);
@@ -40,7 +45,7 @@ main(int argc, char **argv)
 	    ignore_leading_blank(&request_name_p);
 
 	    //reset barcode
-	    for(int l=0; l<=14; l++)
+	    for(int l=0; l<14; l++)
 		bc_data.UPC[l]=0;
 	    bc_data.barcode_type = undefined;
 		
@@ -50,7 +55,8 @@ main(int argc, char **argv)
 		// Barcode erfolgreich analysiert .. keine Fehler
 		// wir können ihn generieren
 		
-                // fprintf(stdout, "Barcode [%d, %s, %d]\n", bc_data.barcode_type, bc_data.title, bc_data.checksum);
+                // fprintf(stdout, "Barcode [%d, %s, %d]\n",
+		//         bc_data.barcode_type, bc_data.title, bc_data.checksum);
 
 		fill_EAN_13(&bc_data);
 		print_EAN_13(&bc_data);

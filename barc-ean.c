@@ -10,7 +10,7 @@
 int
 calc_ean_checksum(struct barcode_data *bc)
 {
-    int rv; //return value
+    int rv = 0; //return value
     bc->checksum = 0;  // init checksum
 
     switch(bc->barcode_type)
