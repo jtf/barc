@@ -3,6 +3,7 @@
 #include <unistd.h>   // for getopt()
 #include <getopt.h>   //  dito
 #include "barc.h"
+#include "gitversion.h"
 
 //TODO: width, height, box
 //TODO: .. ISBN title option (default: none)
@@ -57,6 +58,9 @@ parse_args(int *argc_p, char*const *argv, struct options *o)
 	    break;
 	case 'f':
 	    exit(1);
+	case 'v':
+	  printf("%s\nparse for .barcode requests and generate barcode as troff primitives\nversion %s\n", argv[0], gitversion);
+	  exit(0);
 	case '?':
 	    print_usage(argv);
 	    abort();
