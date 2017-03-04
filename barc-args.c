@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>   // for getopt()
+#include <string.h>
 #include <getopt.h>   //  dito
 #include "barc.h"
 #include "gitversion.h"
@@ -44,6 +45,13 @@ parse_args(int *argc_p, char*const *argv, struct options *o)
     while ((c=getopt_long(*argc_p, argv, optString, long_options, &option_index)) != -1)
 	switch(c)
 	{
+	case 'v':
+	  printf("Barcode Generator %s Version %s (Git-Version %s)\n", argv[0], "0.0.1", gitversion);
+	  printf("Parse for .barcode requests and generate barcode as troff primitives.\n");
+	  exit(0);
+	case '?':
+	    print_usage(argv);
+	    abort();
 	case 'q':
 	    o->quiet=1;
 	    break;
@@ -54,16 +62,22 @@ parse_args(int *argc_p, char*const *argv, struct options *o)
 	    o->no_checksum=1;
 	    break;
         case 'a':
-	    o->aoc = ';';  //TODO
-	    break;
+	    if(argv[optind]!=NULL)
+	    {
+		if (strlen(argv[optind]) == 1)
+		{
+		    o->aoc = (unsigned char) *argv[optind];
+		    optind++;
+		    break;
+		}
+		else
+		    printf("Error: Separator argument to long!\n");
+	    }
+	    else
+		printf("Error: Missing separator character!\n");
+	    exit(1);
 	case 'f':
 	    exit(1);
-	case 'v':
-	  printf("%s\nparse for .barcode requests and generate barcode as troff primitives\nversion %s\n", argv[0], gitversion);
-	  exit(0);
-	case '?':
-	    print_usage(argv);
-	    abort();
 	case 'h':
 	default:
 	    print_usage(argv);
