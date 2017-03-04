@@ -45,6 +45,7 @@ parse_args(int *argc_p, char*const *argv, struct options *o)
     while ((c=getopt_long(*argc_p, argv, optString, long_options, &option_index)) != -1)
 	switch(c)
 	{
+// print different messages/error messages without generating a barcode
 	case 'v':
 	  printf("Barcode Generator %s Version %s (Git-Version %s)\n", argv[0], "0.0.1", gitversion);
 	  printf("Parse for .barcode requests and generate barcode as troff primitives.\n");
@@ -52,6 +53,11 @@ parse_args(int *argc_p, char*const *argv, struct options *o)
 	case '?':
 	    print_usage(argv);
 	    abort();
+	case 'h':
+	    print_usage(argv);
+	    exit(0);
+
+// set flags for quiet mode, debug mode, no-checksum mode
 	case 'q':
 	    o->quiet=1;
 	    break;
@@ -61,6 +67,8 @@ parse_args(int *argc_p, char*const *argv, struct options *o)
 	case 'C':
 	    o->no_checksum=1;
 	    break;
+
+// read separator character
         case 'a':
 	    if(argv[optind]!=NULL)
 	    {
@@ -76,12 +84,16 @@ parse_args(int *argc_p, char*const *argv, struct options *o)
 	    else
 		printf("Error: Missing separator character!\n");
 	    exit(1);
+
+// set input and output files
 	case 'f':
 	    exit(1);
-	case 'h':
+	case 'o':
+	    exit(1);
+
+// on bad option print usage message and abort
 	default:
 	    print_usage(argv);
-	    exit(0);
 	    abort();
 	}
 }
