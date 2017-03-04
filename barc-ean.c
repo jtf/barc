@@ -62,73 +62,144 @@ parse_EAN(char **ean, struct barcode_data *bc, struct options *o)
 {
     char * digit_p;
     unsigned char * title_p;
-
+    
     digit_p = *ean;
     title_p = bc->title;
 
-    // go through rest of line and extract ISBN number
-    if (bc->barcode_type == ISBNx)
+    int pos = 0;
+    unsigned char *UPC;
+    // set UPC first on main code (later on add-on code if needed)
+    UPC = bc->UPC;
+
+    // debug output title/which sort of barcode type
+    if (!o->quiet)
     {
-	int isbnpos = 0;
-	// let title begin with "ISBN "
-	*title_p++='I'; *title_p++='S'; *title_p++='B'; *title_p++='N'; *title_p++=' ';
-	if (!o->quiet) fprintf(stderr, "║│ ║││║   ISBN: ");
-	while( *digit_p != '\n' && isbnpos <= 18 )
+	switch(bc->barcode_type)
 	{
-	    *title_p++ = *digit_p;
-	    if (isdigit(*digit_p))
-	    {
-		bc->UPC[isbnpos++] = *digit_p - 48;
-		if (!o->quiet) fprintf(stderr, "%c ", *digit_p);
-	    }
-	    else if (isbnpos==9 && ( *digit_p == 'X' || *digit_p=='x'))
-	    {
-		if (!o->quiet) fprintf(stderr, "%c (X found) ", *digit_p);
-		bc->UPC[isbnpos++] = 10;
-	    }
-	    digit_p++;
-	}
-	if (!o->quiet) fprintf(stderr, "\n");
-	*title_p = '\0';
-	switch(isbnpos)
-	{
-	case 10: bc->barcode_type=ISBN_10; break;
-	case 12: bc->barcode_type=ISBN_10_2_addon; break;
-//MIST	case 15: bc->barcode_type=ISBN_10_5_addon; break;
-	case 13: bc->barcode_type=ISBN_13; break;
-	case 15: bc->barcode_type=ISBN_13_2_addon; break;
-	case 18: bc->barcode_type=ISBN_13_5_addon; break;
-	default: break; //let it be ISBNx
-	}
-    }
-    else if (bc->barcode_type == EANx)
-    {
-	int eanpos = 0;
-	if (!o->quiet) fprintf(stderr, "║│ ║││║   EAN: ");
-	while(*digit_p != '\n' && eanpos <=13)
-	{
-	    *title_p++ = *digit_p;
-	    if (isdigit(*digit_p))
-	    {
-		bc->UPC[eanpos++] = *digit_p -48;
-		if (!o->quiet) fprintf(stderr, "%c ", *digit_p);
-	    }
-	    digit_p++;
-	}
-	if (!o->quiet) fprintf(stderr, "\n");
-	*title_p = '\0';
-	switch(eanpos)
-	{
-	case 8:  bc->barcode_type=EAN_8; break;
-	case 13: bc->barcode_type=EAN_13; break;
+	case ISBNx: fprintf(stderr, "║│ ║││║   ISBN: "); break;
+	case EANx:  fprintf(stderr, "║│ ║││║   EAN:  "); break;
+//	    case ISSNx: fprintf(stderr, "║│ ║││║   ISSN: "); break;
+//	    case ISMNx: fprintf(stderr, "║│ ║││║   ISMN: "); break;
 	}
     }
 
-    // decide on number of digits which code we have
+    while(*digit_p != '\n')
+    {
+
+	// check for last ISBN-10 checksum X
+	// special treatment
+	if(bc->barcode_type==ISBNx
+	   && (*digit_p=='X' || *digit_p=='x')
+	   && pos==10 )
+	{
+	    if (!o->quiet) fprintf(stderr, "%c (X found) ", *digit_p);
+	    UPC[pos] = 9; // 10th
+	    pos++;
+	}
+	// found 13th number of ISBN or EAN .. so we have ISBN-13 or EAN-13
+	else if((bc->barcode_type==ISBNx || bc->barcode_type==EANx)
+		&& pos == 12) //13th
+	{
+	    if (!o->quiet) fprintf(stderr, "%c ", *digit_p);
+	    UPC[pos++] = *digit_p - 48;
+	    switch(bc->barcode_type)
+	    {
+	    case ISBNx: bc->barcode_type=ISBN_13;break;
+	    case EANx: bc->barcode_type=EAN_13;
+	    }
+	}
+	
+	// found separation character for ISBN-10
+	else if((bc->barcode_type==ISBNx || bc->barcode_type==ISBN_10)
+		&& *digit_p == o->aoc
+		&& pos == 10) //10th +1
+	{
+	    if (!o->quiet) fprintf(stderr, "║│ ║││║   found addon: \"%c\" ", *digit_p);
+	    pos=0;
+	    UPC=bc->addon;
+	    bc->barcode_type=ISBN_10x;
+	}
+	// found separation character for ISBN 13
+	else if((bc->barcode_type==ISBN_13 || bc->barcode_type==EAN_13)
+		&& *digit_p == o->aoc
+		&& pos == 14) //13th +1
+	{
+	    if (!o->quiet) fprintf(stderr, "║│ ║││║   found addon: \"%c\" ", *digit_p);
+	    pos=0;
+	    UPC=bc->addon;
+	    switch(bc->barcode_type)
+	    {
+	    case ISBN_13: bc->barcode_type=ISBN_13x;break;
+	    case EAN_13:  bc->barcode_type=EAN_13x;
+	    }
+	}
+	// addon to long
+	else if( (bc->barcode_type==ISBN_10x
+		  || bc->barcode_type==ISBN_13x
+		  || bc->barcode_type==EAN_13x)
+		 && pos > 5)
+	    break;
+	else if (isdigit(*digit_p))
+	{
+	    if (!o->quiet) fprintf(stderr, "%c ", *digit_p);
+	    UPC[pos++] = *digit_p - 48;
+	}
+	digit_p++;
+    }
+    if (!o->quiet) fprintf(stderr, "\n");
+    *title_p = '\0';
+
+    // ok we have the line scanned, now set rest of types
+    // set addon type
+    if ((pos == 2 || pos ==5)
+	&& (bc->barcode_type==ISBN_10x
+	    || bc->barcode_type==ISBN_13x
+	    || bc->barcode_type==EAN_13x))
+    {
+	if(pos==2)
+	    switch(bc->barcode_type)
+	    {
+	    case ISBN_10x: bc->barcode_type=ISBN_10_2_addon;break;
+	    case ISBN_13x: bc->barcode_type=ISBN_13_2_addon;break;
+	    case EAN_13x:  bc->barcode_type=EAN_13_2_addon;break;
+	    }
+	else switch(bc->barcode_type)
+	     {
+	     case ISBN_10x: bc->barcode_type=ISBN_10_5_addon;break;
+	     case ISBN_13x: bc->barcode_type=ISBN_13_5_addon;break;
+	     case EAN_13x:  bc->barcode_type=EAN_13_5_addon;break;
+	     }
+    }
+    // set broken addon type
+    else if ((pos < 5) && (pos > 2)
+	     && (bc->barcode_type==ISBN_10x
+		 || bc->barcode_type==ISBN_13x
+		 || bc->barcode_type==EAN_13x))
+    {
+	switch(bc->barcode_type)
+	{
+	case ISBN_10x: 
+	case ISBN_13x: bc->barcode_type=ISBNx_addon;break;
+	case EAN_13x:  bc->barcode_type=EANx_addon;break;
+	}
+    }
+    // set isbn-10 type
+    else if ((pos == 10)
+	     && bc->barcode_type==ISBNx)
+    {
+	bc->barcode_type=ISBN_10;//；
+
+    }
+    else if (!(bc->barcode_type > 0))
+	bc->barcode_type=undefined;
+
+    // do some post formating for different codes
     switch(bc->barcode_type)
     {
 	// ------------------- ISBN 10 -------------------------
     case ISBN_10 :
+    case ISBN_10_2_addon :
+    case ISBN_10_5_addon :
 	if (!o->quiet)
 	{
 	    fprintf(stderr, "║│ ║││║   found ISBN-10\n║│ ║││║   1-14: ");
@@ -164,7 +235,11 @@ parse_EAN(char **ean, struct barcode_data *bc, struct options *o)
 	break;
 	// ------------------- ISBN 13 and EAN 13-------------------------
     case ISBN_13 :
+    case ISBN_13_2_addon :
+    case ISBN_13_5_addon :
     case EAN_13 :
+    case EAN_13_2_addon :
+    case EAN_13_5_addon :
 	if (!o->quiet)
 	{
 	    switch(bc->barcode_type)

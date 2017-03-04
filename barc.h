@@ -5,10 +5,16 @@
 // define type of barcode
 enum bc_type
 {
-    // pre-known types
-    undefined = -1,
-    ISBNx = -2,
-    EANx  = -3,
+    // vague and unknown types
+    undefined   = -1,
+    ISBNx       = -2,
+    EANx        = -3,
+    ISBN_10x    = -4,
+    ISBN_13x    = -5,
+    EAN_13x     = -6,
+    // addon error codes
+    ISBNx_addon = -7,
+    EANx_addon   = -8,
 
     // known barcodes
     EAN_8 = 1,
@@ -33,7 +39,6 @@ enum bc_type
     UPC_E_2_addon,
     UPC_E_5_addon
 };
-
 
 struct
 barcode_data

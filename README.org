@@ -27,7 +27,7 @@
   /Usage/:
   
   .barcode CODE_TYPE CODE_DATA
-  .barcode CODE_TYPE CODE_DATA SEPERATOR ADDON_DATA
+  .barcode CODE_TYPE CODE_DATA SEPARATOR ADDON_DATA
 
   - CODE_TYPE :: determines which sort of barcode we have
     - ISBN support for old 10 and new 13 digit version

@@ -13,7 +13,7 @@ void print_usage(char*const *argv)
     printf("   usage: %s [OPTIONS]\n\n", argv[0]);
     printf("   -h --help          help\n");
     printf("   -q --quiet         suppress messages on stderr\n");
-    printf("   -a --addon-char    define addon char (default ";")\n");
+    printf("   -a --addon-char    define addon char (default \";\")\n");
     printf("   -C --no-checksum   ignore failed checksum test and enforce output\n");
     printf("   -v --version       show programm version\n");
     printf("   -f --open [FILE|-] open file instead of stdin\n");
