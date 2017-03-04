@@ -13,6 +13,7 @@ void print_usage(char*const *argv)
     printf("   usage: %s [OPTIONS]\n\n", argv[0]);
     printf("   -h --help          help\n");
     printf("   -q --quiet         suppress messages on stderr\n");
+    printf("   -d --debug         print debug messages on stderr\n");
     printf("   -a --addon-char    define addon char (default \";\")\n");
     printf("   -C --no-checksum   ignore failed checksum test and enforce output\n");
     printf("   -v --version       show programm version\n");
@@ -20,11 +21,12 @@ void print_usage(char*const *argv)
     printf("   -o --out  [FILE|-] open file instead of stdout\n");
 }
 
-static const char *optString = "hqvf:oC";
+static const char *optString = "hqdaCvf:o";
 static struct option long_options[] =
 {
     {"help",        no_argument,       NULL, 'h'},
     {"quiet",       no_argument,       NULL, 'q'},
+    {"debug",       no_argument,       NULL, 'd'},
     {"addon-char",  required_argument, NULL, 'a'},
     {"no-checksum", no_argument,       NULL, 'C'},
     {"version",     no_argument,       NULL, 'v'},
@@ -43,6 +45,9 @@ parse_args(int *argc_p, char*const *argv, struct options *o)
 	{
 	case 'q':
 	    o->quiet=1;
+	    break;
+	case 'd':
+	    o->debug=1;
 	    break;
 	case 'C':
 	    o->no_checksum=1;

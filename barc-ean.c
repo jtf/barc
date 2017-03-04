@@ -6,8 +6,12 @@
 
 
 
-void print_type(int type)
+void debug_print_type(struct barcode_data *bc, struct options *o)
 {
+    int type;
+    type = bc->barcode_type;
+
+    if(! o->debug || o->quiet) return;
     fprintf(stderr, "----> [");
     switch(type)
     {
@@ -52,13 +56,8 @@ void print_type(int type)
 int
 calc_ean_checksum(struct barcode_data *bc)
 {
-
-    print_type(bc->barcode_type);
-
-	
     int rv = 0; //return value
     bc->checksum = 0;  // init checksum
-
     switch(bc->barcode_type)
     {
     case ISBN_10:
@@ -95,9 +94,6 @@ transform_ISBN10to13(struct barcode_data *bc)
 	&& bc->barcode_type != ISBN_10_2_addon
 	&& bc->barcode_type != ISBN_10_5_addon ) return;
 
-
-    print_type(bc->barcode_type);
-    
     // arrange numbers
     for (int i=8; i>=0; i--)
 	bc->UPC[i+3] = bc->UPC[i];
@@ -111,7 +107,6 @@ transform_ISBN10to13(struct barcode_data *bc)
     // calculate and reset new checksum
     if (!calc_ean_checksum(bc))
 	bc->UPC[12] = bc->checksum;
-
 }
 
 int
@@ -127,6 +122,8 @@ parse_EAN(char **ean, struct barcode_data *bc, struct options *o)
     unsigned char *UPC;
     // set UPC first on main code (later on add-on code if needed)
     UPC = bc->UPC;
+
+    debug_print_type(bc, o);
 
     // debug output title/which sort of barcode type
     if (!o->quiet)
@@ -155,6 +152,7 @@ parse_EAN(char **ean, struct barcode_data *bc, struct options *o)
 	}
 	// found 13th number of ISBN or EAN .. so we have ISBN-13 or EAN-13
 	else if((bc->barcode_type==ISBNx || bc->barcode_type==EANx)
+		&& isdigit(*digit_p)
 		&& pos == 12) //13th
 	{
 	    if (!o->quiet) fprintf(stderr, "%c ", *digit_p);
@@ -162,7 +160,7 @@ parse_EAN(char **ean, struct barcode_data *bc, struct options *o)
 	    switch(bc->barcode_type)
 	    {
 	    case ISBNx: bc->barcode_type=ISBN_13;break;
-	    case EANx: bc->barcode_type=EAN_13;
+	    case EANx: bc->barcode_type=EAN_13;break;
 	    }
 	}
 	
@@ -179,7 +177,7 @@ parse_EAN(char **ean, struct barcode_data *bc, struct options *o)
 	// found separation character for ISBN 13
 	else if((bc->barcode_type==ISBN_13 || bc->barcode_type==EAN_13)
 		&& *digit_p == o->aoc
-		&& pos == 14) //13th +1
+		&& pos == 13) //13th +1
 	{
 	    if (!o->quiet) fprintf(stderr, "\n║│ ║││║   found addon: \"%c\" ", *digit_p);
 	    pos=0;
@@ -206,10 +204,7 @@ parse_EAN(char **ean, struct barcode_data *bc, struct options *o)
     if (!o->quiet) fprintf(stderr, "\n");
     *title_p = '\0';
 
-
-
-    print_type(bc->barcode_type);
-
+    debug_print_type(bc, o);
     
     // ok we have the line scanned, now set rest of types
     // set addon type
@@ -269,11 +264,7 @@ parse_EAN(char **ean, struct barcode_data *bc, struct options *o)
     else if (!(bc->barcode_type > 0))
 	bc->barcode_type=undefined;
 
-
-    
-    print_type(bc->barcode_type);
-
-    
+    debug_print_type(bc, o);
     
     // do some post formating for different codes
     switch(bc->barcode_type)

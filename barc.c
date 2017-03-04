@@ -12,6 +12,7 @@ main(int argc, char **argv)
     struct options Opts = {
 	0,   // quiet off
 	0,   // test for checksums on
+	0,   // debug messages off
 	';'  // add-on char set to semicolon
     };
     struct barcode_data bc_data;
