@@ -5,17 +5,65 @@
 #include "barc-ean.h"
 
 
+
+void print_type(int type)
+{
+    fprintf(stderr, "----> [");
+    switch(type)
+    {
+	// vague and unknown types
+    case undefined   : fprintf(stderr, "undefined"); break;
+    case ISBNx       : fprintf(stderr, "ISBNx"); break;
+    case EANx        : fprintf(stderr, "EANx"); break;
+    case ISBN_10x    : fprintf(stderr, "ISBN_10x"); break;
+    case ISBN_13x    : fprintf(stderr, "ISBN_13x"); break;
+    case EAN_13x     : fprintf(stderr, "EAN_13x"); break;
+	// addon error codes
+    case ISBNx_addon : fprintf(stderr, "ISBNx_addon"); break;
+    case EANx_addon  : fprintf(stderr, "EANx_addon"); break;
+	// known barcodes
+    case EAN_8       : fprintf(stderr, "EAN_8"); break;
+    case EAN_13      : fprintf(stderr, "EAN_13"); break;
+    case ISBN_10     : fprintf(stderr, "ISBN_10"); break;
+    case ISBN_13     : fprintf(stderr, "ISBN_13"); break;
+    case UPC_A       : fprintf(stderr, "UPC_A"); break;
+    case UPC_B       : fprintf(stderr, "UPC_B"); break;
+    case UPC_C       : fprintf(stderr, "UPC_C"); break;
+    case UPC_D       : fprintf(stderr, "UPC_D"); break;
+    case UPC_E       : fprintf(stderr, "UPC_E"); break;
+    
+	// barcodes with additional barcode : )
+    case EAN_13_2_addon  : fprintf(stderr, "EAN_13_2_addon"); break;
+    case EAN_13_5_addon  : fprintf(stderr, "EAN_13_5_addon"); break;
+    case ISBN_10_2_addon : fprintf(stderr, "ISBN_10_2_addon"); break;
+    case ISBN_10_5_addon : fprintf(stderr, "ISBN_10_5_addon"); break;
+    case ISBN_13_2_addon : fprintf(stderr, "ISBN_13_2_addon"); break;
+    case ISBN_13_5_addon : fprintf(stderr, "ISBN_13_5_addon"); break;
+    case UPC_A_2_addon   : fprintf(stderr, "UPC_A_2_addon"); break;
+    case UPC_A_5_addon   : fprintf(stderr, "UPC_A_5_addon"); break;
+    case UPC_E_2_addon   : fprintf(stderr, "UPC_E_2_addon"); break;
+    case UPC_E_5_addon   : fprintf(stderr, "UPC_E_5_addon"); break;
+    }
+    fprintf(stderr, "] <----\n");
+}
+
 // calculate checksum depending on barcode type
 // return 0 if checksum differs from input else 1
 int
 calc_ean_checksum(struct barcode_data *bc)
 {
+
+    print_type(bc->barcode_type);
+
+	
     int rv = 0; //return value
     bc->checksum = 0;  // init checksum
 
     switch(bc->barcode_type)
     {
     case ISBN_10:
+    case ISBN_10_2_addon:
+    case ISBN_10_5_addon:
 	for (int i=0; i<9; i++)
 	{
 	    bc->checksum += bc->UPC[i]*(i+1);
@@ -24,7 +72,11 @@ calc_ean_checksum(struct barcode_data *bc)
 	rv = (bc->UPC[9] == bc->checksum);
 	break;
     case EAN_13:
+    case EAN_13_2_addon:
+    case EAN_13_5_addon:
     case ISBN_13:
+    case ISBN_13_2_addon:
+    case ISBN_13_5_addon:
 	for (int i=0; i<6; i++)
 	{
 	    bc->checksum += bc->UPC[2*i] + bc->UPC[2*i+1]*3;
@@ -39,8 +91,13 @@ calc_ean_checksum(struct barcode_data *bc)
 void
 transform_ISBN10to13(struct barcode_data *bc)
 {
-    if (bc->barcode_type != ISBN_10) return;
+    if (bc->barcode_type != ISBN_10
+	&& bc->barcode_type != ISBN_10_2_addon
+	&& bc->barcode_type != ISBN_10_5_addon ) return;
 
+
+    print_type(bc->barcode_type);
+    
     // arrange numbers
     for (int i=8; i>=0; i--)
 	bc->UPC[i+3] = bc->UPC[i];
@@ -114,7 +171,7 @@ parse_EAN(char **ean, struct barcode_data *bc, struct options *o)
 		&& *digit_p == o->aoc
 		&& pos == 10) //10th +1
 	{
-	    if (!o->quiet) fprintf(stderr, "║│ ║││║   found addon: \"%c\" ", *digit_p);
+	    if (!o->quiet) fprintf(stderr, "\n║│ ║││║   found addon: \"%c\" ", *digit_p);
 	    pos=0;
 	    UPC=bc->addon;
 	    bc->barcode_type=ISBN_10x;
@@ -124,7 +181,7 @@ parse_EAN(char **ean, struct barcode_data *bc, struct options *o)
 		&& *digit_p == o->aoc
 		&& pos == 14) //13th +1
 	{
-	    if (!o->quiet) fprintf(stderr, "║│ ║││║   found addon: \"%c\" ", *digit_p);
+	    if (!o->quiet) fprintf(stderr, "\n║│ ║││║   found addon: \"%c\" ", *digit_p);
 	    pos=0;
 	    UPC=bc->addon;
 	    switch(bc->barcode_type)
@@ -149,6 +206,11 @@ parse_EAN(char **ean, struct barcode_data *bc, struct options *o)
     if (!o->quiet) fprintf(stderr, "\n");
     *title_p = '\0';
 
+
+
+    print_type(bc->barcode_type);
+
+    
     // ok we have the line scanned, now set rest of types
     // set addon type
     if ((pos == 2 || pos ==5)
@@ -183,6 +245,20 @@ parse_EAN(char **ean, struct barcode_data *bc, struct options *o)
 	case EAN_13x:  bc->barcode_type=EANx_addon;break;
 	}
     }
+    // when addon is zero length ignore it
+    else if (pos == 0
+	     && (bc->barcode_type==ISBN_10x
+		 || bc->barcode_type==ISBN_13x
+		 || bc->barcode_type==EAN_13x))
+    {
+	if (!o->quiet) fprintf(stderr, "║│!║││║   separator but no addon given (addon ignored)\n");
+	switch(bc->barcode_type)
+	{
+	case ISBN_10x: bc->barcode_type=ISBN_10;break;
+	case ISBN_13x: bc->barcode_type=ISBN_13;break;
+	case EAN_13x:  bc->barcode_type=EAN_13;
+	}
+    }
     // set isbn-10 type
     else if ((pos == 10)
 	     && bc->barcode_type==ISBNx)
@@ -193,6 +269,12 @@ parse_EAN(char **ean, struct barcode_data *bc, struct options *o)
     else if (!(bc->barcode_type > 0))
 	bc->barcode_type=undefined;
 
+
+    
+    print_type(bc->barcode_type);
+
+    
+    
     // do some post formating for different codes
     switch(bc->barcode_type)
     {
@@ -230,7 +312,7 @@ parse_EAN(char **ean, struct barcode_data *bc, struct options *o)
 	    if (!o->quiet)
 		fprintf(stderr, "║│!║││║   ISBN-10 checksum error  ^ (should be %d, is %d)\n",
 			bc->checksum, bc->UPC[9]);
-	    return o->no_checksum; // if set 1 else 0
+	    return o->no_checksum; // if set return 1 else 0
 	}
 	break;
 	// ------------------- ISBN 13 and EAN 13-------------------------
@@ -251,8 +333,6 @@ parse_EAN(char **ean, struct barcode_data *bc, struct options *o)
 		fprintf(stderr, "%d ", bc->UPC[i]);
 	    fprintf(stderr, "\n");
 	}
-//	bc->barcode_type=ISBN_13;
-
 	if(calc_ean_checksum(bc))
 	{
 	    if (!o->quiet) fprintf(stderr, "║│ ║││║            calculated checksum: %d\n", bc->checksum);
@@ -265,7 +345,7 @@ parse_EAN(char **ean, struct barcode_data *bc, struct options *o)
 			bc->checksum, bc->UPC[12]);
 		if (o->no_checksum) fprintf(stderr, "║│!║││║   Warning: Faulty barcode will be generated!\n");
 	    }
-	    return o->no_checksum; // if set 1 else 0
+	    return o->no_checksum; // if set return 1 else 0
 	}
 	break;
 	// ------------------- ISBN too short error -------------------------
