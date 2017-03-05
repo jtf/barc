@@ -48,8 +48,10 @@ barcode_data
   unsigned char UPC[14];
   unsigned char addon[5];
   unsigned char title[40];
-
   // 59 stripes -> save 59 lengths  ( 3 + 6*(4) + 5 + 6*(4) + 3 = 59 )
   // for EAN-13, ISBN-13 and UPC-A
-  unsigned char bars[59];
+  unsigned char bars[60];
+  // _2:  3 + 1*4 + 2 + 1*4 = 13
+  // _5:  3 + 1*4 + (2 + 1*4)*4 = 31
+  unsigned char addbars[31];
 };// bc_data;

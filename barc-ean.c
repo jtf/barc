@@ -351,12 +351,7 @@ parse_EAN(char **ean, struct barcode_data *bc, struct options *o)
     return 1;
 }
 
-
-/*
- *
- *   EAN troff output
- *
- */
+// —— FILL BARCODE WITH BARS —————————————————————————————————————————————————
 
 // local: insert bar lengths of given guard pattern in barcode struct
 int
@@ -395,7 +390,28 @@ insert_right_digits(int pos, struct barcode_data *bc)
 }
 
 /*
- *  take barcode struct and fill .bars with bar lengths
+ *  insert n digits in given numberset
+ * pos    -- bar/space-position
+ * num    -- number off symbols to encode
+ * offset -- UPC position to start from
+ * set    -- how the symbols should be encoded EAN_A/B/C
+ * bc     -- barcode struct to work on
+ */
+int
+insert_n_digits(int pos, int num, int offset, int set, struct barcode_data *bc)
+{
+    for (int i=0; i<offset; i++)
+	for (int modul=0; modul<4; modul++)
+	{
+		bc->bars[pos++] =
+		ean_symbols[bc->UPC[num+i]]
+		[ean_symbol_direction[set][modul]];
+	}
+    return pos;
+}
+
+/*
+ *  take barcode struct and fill bars with bar lengths for EAN-13
  */
 void
 fill_EAN_13(struct barcode_data *bc)
@@ -406,8 +422,85 @@ fill_EAN_13(struct barcode_data *bc)
   pos = insert_guard(pos, EAN_CENTRE_GUARD, bc);
   pos = insert_right_digits(pos, bc);
   pos = insert_guard(pos, EAN_NORMAL_GUARD, bc);
-  pos = 0;
 }
+
+/*
+ *  take barcode struct and fill bars with bar lengths for EAN-8
+ */
+void
+fill_EAN_8(struct barcode_data *bc)
+{
+  int pos = 0;
+  pos = insert_guard(pos, EAN_NORMAL_GUARD, bc);
+  pos = insert_n_digits(pos, 4, 0, EAN_A, bc);
+  pos = insert_guard(pos, EAN_CENTRE_GUARD, bc);
+  pos = insert_n_digits(pos, 4, 4, EAN_C, bc);
+  pos = insert_guard(pos, EAN_NORMAL_GUARD, bc);
+}
+
+/*
+ *  take barcode struct and fill bars with bar lengths for UPC-A
+ * why not use ean-13 with leading zero??
+ */
+void
+fill_UPC_A(struct barcode_data *bc)
+{
+  int pos = 0;
+  pos = insert_guard(pos, EAN_NORMAL_GUARD, bc);
+  pos = insert_n_digits(pos, 6, 1, EAN_A, bc);
+  pos = insert_guard(pos, EAN_CENTRE_GUARD, bc);
+  pos = insert_n_digits(pos, 6, 7, EAN_C, bc);
+  pos = insert_guard(pos, EAN_NORMAL_GUARD, bc);
+}
+
+/*
+ *  take barcode struct and fill bars with bar lengths for UPC-E
+ */
+
+/* void */
+/* fill_UPC_E(struct barcode_data *bc) */
+/* { */
+/*   int pos = 0; */
+/*   pos = insert_guard(pos, EAN_NORMAL_GUARD, bc); */
+/*   pos = FUCKUP */
+/*   pos = insert_guard(pos, EAN_SPECIAL_GUARD, bc); */
+/* } */
+
+
+void
+fill_addon_2(struct barcode_data *bc)
+{
+    int check = (bc->addon[0] * 10 + bc->addon[1]) % 4;
+    int pos = 0;
+
+    pos = insert_guard(pos, EAN_ADD_ON_GUARD, bc);
+    for (int i=0; i<=1; i++)
+	for (int modul=0; modul<4; modul++)
+	{
+	    //                                                A or B
+	    bc->addbars[pos++] =
+		ean_symbols
+		[ean_symbol_direction[bc->addon[i]][ean13_leftmost_order[check][i+3]]]
+		[modul];
+	    if(i==0)
+		pos = insert_guard(pos, EAN_ADD_ON_DELIM, bc);
+	}
+
+  /* for (int digit=0; digit<6; digit++) */
+  /*   for (int modul=0; modul<4; modul++) */
+  /*     bc->bars[pos++] = */
+  /* 	ean_symbols[bc->UPC[digit+7]] */
+  /* 	[ean_symbol_direction[EAN_A][modul]]; */
+
+}
+
+/* void */
+/* fill_addon_5(struct barcode_data *bc) */
+/* { */
+/* } */
+
+
+// —— DO TROFF OUTPUT ————————————————————————————————————————————————————————
 
 /*
  *  take barcode struct and generate TROFF code from bc.bars

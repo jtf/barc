@@ -34,7 +34,8 @@ ean_symbol_direction[2][4] =
 enum
 {
     EAN_A = 0,
-    EAN_B = 1
+    EAN_B = 1,
+    EAN_C = 0
 };
 
 // the first number is not encoded as a symbol but
@@ -54,6 +55,22 @@ ean13_leftmost_order[10][6] =
     {EAN_A, EAN_B, EAN_B,   EAN_A, EAN_B, EAN_A}  // 9
 };
 
+static const unsigned char
+ean_addon_5_order[10][5] =
+{
+    {EAN_B, EAN_B, EAN_A, EAN_A, EAN_A},
+    {EAN_B, EAN_A, EAN_B, EAN_A, EAN_A},
+    {EAN_B, EAN_A, EAN_A, EAN_B, EAN_A},
+    {EAN_B, EAN_A, EAN_A, EAN_A, EAN_B},
+    {EAN_A, EAN_B, EAN_B, EAN_A, EAN_A},
+    {EAN_A, EAN_A, EAN_B, EAN_B, EAN_A},
+    {EAN_A, EAN_A, EAN_A, EAN_B, EAN_B},
+    {EAN_A, EAN_B, EAN_A, EAN_B, EAN_A},
+    {EAN_A, EAN_B, EAN_A, EAN_A, EAN_B},
+    {EAN_A, EAN_A, EAN_B, EAN_A, EAN_B}
+};
+
+
 // module count long short long short … etc
 // used for how many modules have the same length in a row.
 // Mainly used for emphasize guard patterns.
@@ -67,7 +84,7 @@ enum
     EAN_CENTRE_GUARD  = 1,
     EAN_SPECIAL_GUARD = 2,
     EAN_ADD_ON_GUARD  = 3,
-    EAN_ADD_ON_DELIN  = 4
+    EAN_ADD_ON_DELIM  = 4
 };
 
 static const unsigned char

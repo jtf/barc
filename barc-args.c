@@ -23,7 +23,7 @@ void print_usage(char*const *argv)
     printf("   -o --out  [FILE|-] open file instead of stdout\n");
 }
 
-static const char *optString = "hqdaCvf:o";
+static const char *optString = "hqda:Cvf:o:";
 static struct option long_options[] =
 {
     {"help",        no_argument,       NULL, 'h'},

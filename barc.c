@@ -16,7 +16,7 @@ main(int argc, char **argv)
 	';'  // add-on char set to semicolon
     };
     struct barcode_data bc_data;
-    
+
     parse_args(&argc, argv, &Opts);
 
     int c;

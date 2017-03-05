@@ -11,6 +11,8 @@ gitversion.h: .git/HEAD .git/index
 	echo "const char *gitversion = \"$(shell git describe --tags --always)\";" > $@
 
 .PHONY: clean
+
 clean:
 	rm $(BIN)
 	rm gitversion.h
+
