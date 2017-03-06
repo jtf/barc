@@ -70,16 +70,10 @@ parse_args(int *argc_p, char*const *argv, struct options *o)
 
 // read separator character
         case 'a':
-	    if(argv[optind]!=NULL)
+	    if (optarg !=NULL && optarg != 0)
 	    {
-		if (strlen(argv[optind]) == 1)
-		{
-		    o->aoc = (unsigned char) *argv[optind];
-		    optind++;
-		    break;
-		}
-		else
-		    printf("Error: Separator argument to long!\n");
+		o->aoc = (unsigned char) optarg[0];
+		break;
 	    }
 	    else
 		printf("Error: Missing separator character!\n");
