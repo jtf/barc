@@ -1,23 +1,30 @@
 
 * Compile
-
-  gcc -std=gnu11 -Wpedantic -Wall -Wextra -O3\
-  barc.c barc-args.c barc-ean.c barc-parse.c -o barc
-
-  or
-
-  make
+  
+  Just run: ~make~
 
 * Usage
+  
+  You can pipe a regular troff file wich contains ~.barcode~ requests
+  through barc:
 
-  see: ./barc -h
+  ~$ cat file.troff | ./barc | groff | …~
 
-** implemented Options
+  The --help argument of barc gives the possible options:
+
+** until now implemented Options
 
    - -q --quiet       :: suppress output on stderr
    - -h --help        :: print usage description
+   - -d --debug       :: print debug messages on stderr
    - -C --no-checksum :: generate faulty barcode also on failed
         checksum test. Use with caution.
+   - -a C --addon-char C :: 
+        Override default separation char ";". The space character can
+        be used, but keep in mind that it can lead to confusion on
+        detecting the right barcode. There must be a separator between
+        the main barcode and supplement barcode.
+   - -v --version     :: print barc version and exit
 
 * Troff request syntax
 
@@ -25,19 +32,18 @@
   (howsoever). Longer lines will be ignored (TODO).
   
   /Usage/:
-  
-  .barcode CODE_TYPE CODE_DATA
-  .barcode CODE_TYPE CODE_DATA SEPARATOR ADDON_DATA
+  ~.barcode CODE_TYPE CODE_DATA~
+  ~.barcode CODE_TYPE CODE_DATA SEPARATOR ADDON_DATA~
 
   - CODE_TYPE :: determines which sort of barcode we have
     - ISBN support for old 10 and new 13 digit version
     - EAN  support for 8 and 13 digits
 
   - CODE_DATA :: Data which is coded in main barcode according to
-                 selected CODE_TYPE.
+                 selected CODE_TYPE. (i. e. 0-547-24964-0)
 
   // not implemented yet
-  .barcopt [next] KEY VAL [KEY VAL] … 
+  ~.barcopt [next] KEY VAL [KEY VAL] …~
 
 ** barcode request
 *** CODE_TYPE: ISBN
@@ -57,29 +63,30 @@
     CODE_DATA can have any format.  All hyphens and characters, beside
     digits, and X (or x) on tenth position, will be ignored.
 
-    - ISBN-10 example :: .barcode ISBN 0-547-24964-0
-    - ISBN-10 example :: .barcode ISBN 193778553X
-    - ISBN-13 example :: .barcode ISBN isbn: 978-0-547-24964-3
-    - ISBN-13 example :: .barcode ISBN 9781593274351
+    - ISBN-10 example :: ~.barcode ISBN 0-547-24964-0~
+    - ISBN-10 example :: ~.barcode ISBN 193778553X~
+    - ISBN-13 example :: ~.barcode ISBN isbn: 978-0-547-24964-3~
+    - ISBN-13 example :: ~.barcode ISBN 9781593274351~
 
     /NOTE:/ If the title for ISBN barcodes is implemented the format of
     whole CODE_DATA string will be used.
 
-*** CODE_TYPE: EAN					:not_implemented_yet:
+*** CODE_TYPE: EAN				      :not_fully_implemented:
 
     The number is checked for a correct checksum. Output is prohibited
     (default) if checksum test has failed. To override suppressed
     output use option --no-checksum.
 
-    ISBN-13 and EAN-13 are defacto the same so the EAN notation 
+    ISBN-13 and EAN-13 are defacto the same so the EAN notation can
+    also be used to print ISBN-13 barcodes.
 
     CODE_DATA can have any format.  All hyphens and characters will be
     ignored. Only digits are considered.
 
-    - EAN-13 example :: .barcode EAN 101-213-141-516-4
+    - EAN-13 example :: ~.barcode EAN 101-213-141-516-4~
 
     - EAN-13 with addon example ::
-	 .barcode EAN 101-213-141-516-4 ; 12-345
+	 ~.barcode EAN 101-213-141-516-4 ; 12-345~
 
     /NOTE:/ there will be no title in this
 
