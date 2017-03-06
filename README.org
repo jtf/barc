@@ -1,7 +1,7 @@
 
 * Compile
   
-  Just run: ~make~
+  Just run:  ~make~
 
 * Usage
   

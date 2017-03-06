@@ -6,8 +6,7 @@
 #include "barc.h"
 #include "gitversion.h"
 
-//TODO: width, height, box
-//TODO: .. ISBN title option (default: none)
+const char *barc_version = "0.0.1";
 
 void print_usage(char*const *argv)
 {
@@ -47,7 +46,7 @@ parse_args(int *argc_p, char*const *argv, struct options *o)
 	{
 // print different messages/error messages without generating a barcode
 	case 'v':
-	  printf("Barcode Generator %s Version %s (Git-Version %s)\n", argv[0], "0.0.1", gitversion);
+	  printf("Barcode Generator %s Version %s (Git-Version %s)\n", argv[0], barc_version, gitversion);
 	  printf("Parse for .barcode requests and generate barcode as troff primitives.\n");
 	  exit(0);
 	case '?':
