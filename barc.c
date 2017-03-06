@@ -64,13 +64,11 @@ main(int argc, char **argv)
 	    }
 	    else
 	    {
-		// write out original request
-		if (!Opts.quiet)
-		{
+		// write out original request (not a barc request)
+		if (Opts.debug)
 		    fprintf(stderr, "║│!║││║ ! [request ignored]\n");
-		    fputc(c, stdout);
-		    fputs(request_buffer, stdout);
-		}
+		fputc(c, stdout);
+		fputs(request_buffer, stdout);
 	    }
 	    column=1;
 	    row++;
