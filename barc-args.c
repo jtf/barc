@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>   // for getopt()
+#include <unistd.h>   // for getopt() and dup2()
 #include <string.h>
 #include <getopt.h>   //  dito
 #include "barc.h"
@@ -36,9 +36,16 @@ static struct option long_options[] =
     {NULL,          0,                 NULL,  0 }
 };
 
+// close stdin on exit, used by replaced filedescriptor on in-file
+void exit_close_file()
+{
+    fclose(stdin);
+}
+
 void
 parse_args(int *argc_p, char*const *argv, struct options *o)
 {
+    FILE *fdin;
     int c;
     int option_index;
     while ((c=getopt_long(*argc_p, argv, optString, long_options, &option_index)) != -1)
@@ -80,8 +87,22 @@ parse_args(int *argc_p, char*const *argv, struct options *o)
 
 // set input and output files
 	case 'f':
+	    if (optarg !=NULL && optarg != 0)
+	    {
+		if (( fdin = fopen(optarg, "r") ) ==  NULL )
+		{
+		    printf("Cannot Open File: %s\n", optarg) ;
+		    exit(2) ;
+		}
+		dup2(fileno(fdin), STDIN_FILENO);
+		atexit(exit_close_file);
+		break;
+	    }
+	    else
+		printf("Error: Missing input file name!\n");
 	    exit(1);
 	case 'o':
+	    // not implemented yet
 	    exit(1);
 
 // on bad option print usage message and abort
@@ -90,4 +111,3 @@ parse_args(int *argc_p, char*const *argv, struct options *o)
 	    abort();
 	}
 }
-
