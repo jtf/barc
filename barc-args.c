@@ -10,16 +10,16 @@ const char *barc_version = "0.0.1";
 
 void print_usage(char*const *argv)
 {
-    printf("parse for .barcode requests and generate barcode as troff primitives\n\n");
+    printf("Parse for .barcode requests and generate barcode as Troff primitives.\n\n");
     printf("   usage: %s [OPTIONS]\n\n", argv[0]);
     printf("   -h --help          help\n");
     printf("   -q --quiet         suppress messages on stderr\n");
     printf("   -d --debug         print debug messages on stderr\n");
-    printf("   -a --addon-char    define addon char (default \";\")\n");
+    printf("   -a --addon-char C  define addon char (default \";\")\n");
     printf("   -C --no-checksum   ignore failed checksum test and enforce output\n");
     printf("   -v --version       show programm version\n");
-    printf("   -f --open [FILE|-] open file instead of stdin\n");
-    printf("   -o --out  [FILE|-] open file instead of stdout\n");
+    printf("   -f --open FILE     open input file instead of stdin\n");
+    printf("   -o --out FILE      use output file instead of stdout\n");
 }
 
 static const char *optString = "hqda:Cvf:o:";

@@ -25,7 +25,8 @@
         detecting the right barcode. There must be a separator between
         the main barcode and supplement barcode.
    - -v --version     :: print barc version and exit
-
+   - -f FILE --open FILE ::
+	Open FILE instead reading from stdin.
 * Troff request syntax
 
   Maximal length of request input line is 1000 characters
