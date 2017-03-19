@@ -49,22 +49,22 @@ parse_barcode_type(char ** barcode, struct barcode_data *bc, struct options *o)
 int
 parse_request(char ** request, int row, struct barcode_data *bc, struct options *o)
 {
-  
+
   char *content, *err_output_p;
   //    FILE file;
-  
+
   const char bc_string[] = "barcode\0";
   content = strstr(*request, bc_string);
-  
+
   if (content != NULL)
   {
       content += strlen(bc_string) +1;
-      
+
       // debug output
       if (!o->quiet)
       {
 	  fprintf(stderr, "BARCODE request found in line (%d) with parameters: \"", row);
-	  
+
 	  err_output_p = content;
 	  while(*err_output_p != '\n')
 	  {
@@ -74,7 +74,7 @@ parse_request(char ** request, int row, struct barcode_data *bc, struct options 
 	  fprintf(stderr, "\"\n");
       }
       *request = content;
-      
+
       return parse_barcode_type(&content, bc, o);
   }
   else

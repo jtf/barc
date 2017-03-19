@@ -26,7 +26,7 @@ enum bc_type
     UPC_C,
     UPC_D,
     UPC_E,
-    
+
     // barcodes with additional barcode : )
     EAN_13_2_addon,
     EAN_13_5_addon,

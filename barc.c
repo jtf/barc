@@ -25,7 +25,7 @@ main(int argc, char **argv)
     unsigned int bytenum = 0;
     char request_buffer[1000];
     char *request_name_p;
-    
+
     while ((c=fgetc(stdin)) != EOF)
     {
 	bytenum++;
@@ -37,9 +37,9 @@ main(int argc, char **argv)
 	}
 	else if (c=='.' && column==1)
 	{
-	    
+
 	    // read request, check for spaces and tabs and ignore them,
-	    // 
+	    //
 	    fgets(request_buffer, 1000, stdin);
 	    bytenum += strlen(request_buffer);
 	    request_name_p = request_buffer;
@@ -49,13 +49,13 @@ main(int argc, char **argv)
 	    for(int l=0; l<14; l++)
 		bc_data.UPC[l]=0;
 	    bc_data.barcode_type = undefined;
-		
+
 	    if (parse_request(&request_name_p, row, &bc_data, &Opts))
 	    {
 
 		// Barcode erfolgreich analysiert .. keine Fehler
 		// wir können ihn generieren
-		
+
                 // fprintf(stdout, "Barcode [%d, %s, %d]\n",
 		//         bc_data.barcode_type, bc_data.title, bc_data.checksum);
 
